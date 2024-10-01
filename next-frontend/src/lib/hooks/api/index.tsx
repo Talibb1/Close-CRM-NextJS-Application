@@ -4,3 +4,4 @@ export * from './useFile';
 export * from './useLead';
 export * from './useNotes';
 export * from './useUser';
+export * from './useAuth';

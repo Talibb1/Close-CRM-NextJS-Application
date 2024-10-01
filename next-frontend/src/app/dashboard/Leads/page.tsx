@@ -1,6 +1,5 @@
 import TableLoader from "@/components/layouts/loader/TableLoder";
-import TableLoder from "@/components/layouts/loader/TableLoder";
-import Tables from "@/components/pages/tables";
+import Tables from "@/components/pages/leads";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 

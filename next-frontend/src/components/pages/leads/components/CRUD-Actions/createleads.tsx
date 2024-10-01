@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import { Button } from "@/components/custom/button";
 import { Input } from "@/components/ui/input";
@@ -10,16 +12,14 @@ import { useCreateLead } from "@/lib/hooks/api/useLead";
 import { useLoading } from "@/components/ui/ui/loading";
 import { PlusIcon } from "@radix-ui/react-icons";
 import { useUploadCsv } from "@/lib/hooks/api/useFile";
+import React from "react";
 
 type FormValues = z.infer<typeof LeadesSchema>;
 
 export function CreateLeads() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  
-  // These should return a single function, not an array
   const createLead = useCreateLead();
   const uploadCsv = useUploadCsv();
-
   const { loading, startLoading, stopLoading } = useLoading();
 
   const {
@@ -39,38 +39,38 @@ export function CreateLeads() {
       reset();
       setIsModalOpen(false);
     } catch (err: any) {
-      notify(
-        "error",
-        err?.data?.message || "Something went wrong. Please try again."
-      );
+      console.error("Error creating lead:", err);
+      notify("error", err?.data?.message || "Something went wrong. Please try again.");
     } finally {
       stopLoading();
     }
   };
 
-  const handleCsvUpload = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleCsvUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
 
-    if (file && file.type === "text/csv") {
-      startLoading();
-      try {
-        const formData = new FormData();
-        formData.append("file", file);
-        await uploadCsv.mutateAsync(formData);
-        notify("success", "CSV file uploaded successfully!");
-        setIsModalOpen(false);
-      } catch (err: any) {
-        notify(
-          "error",
-          err?.data?.message || "Failed to upload CSV file. Please try again..."
-        );
-      } finally {
-        stopLoading();
+    if (file) {
+      console.log("Uploading file:", file.name, "Type:", file.type);
+      if (file.type === "text/csv") {
+        startLoading();
+        try {
+          const formData = new FormData();
+          formData.append("file", file);
+          const response = await uploadCsv.mutateAsync(formData);
+          console.log("CSV upload response:", response);
+          notify("success", "CSV file uploaded successfully!");
+          setIsModalOpen(false);
+        } catch (err: any) {
+          console.error("CSV upload error:", err);
+          notify("error", err?.data?.message || "Failed to upload CSV file. Please try again...");
+        } finally {
+          stopLoading();
+        }
+      } else {
+        notify("error", "Please upload a valid CSV file.");
       }
     } else {
-      notify("error", "Please upload a valid CSV file.");
+      notify("error", "No file selected. Please choose a file to upload.");
     }
   };
 

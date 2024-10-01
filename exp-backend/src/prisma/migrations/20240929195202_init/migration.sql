@@ -2,7 +2,7 @@
 CREATE TYPE "TokenType" AS ENUM ('ACCESS', 'REFRESH');
 
 -- CreateEnum
-CREATE TYPE "Role" AS ENUM ('ADMIN', 'USER', 'SUPERADMIN');
+CREATE TYPE "Role" AS ENUM ('SUPERADMIN', 'ADMIN', 'USER');
 
 -- CreateEnum
 CREATE TYPE "AuthProvider" AS ENUM ('GOOGLE', 'LOCAL');
@@ -12,6 +12,9 @@ CREATE TYPE "TaskStatus" AS ENUM ('PENDING', 'COMPLETED', 'CANCELLED');
 
 -- CreateEnum
 CREATE TYPE "OpportunityStage" AS ENUM ('QUALIFICATION', 'PROPOSAL', 'NEGOTIATION', 'CLOSED_WON', 'CLOSED_LOST');
+
+-- CreateEnum
+CREATE TYPE "LeadAccessRole" AS ENUM ('ADMIN', 'SUPERADMIN', 'RESTRICTEDUSER', 'USER');
 
 -- CreateTable
 CREATE TABLE "User" (
@@ -25,6 +28,8 @@ CREATE TABLE "User" (
     "authProviders" "AuthProvider"[] DEFAULT ARRAY['LOCAL']::"AuthProvider"[],
     "isActive" BOOLEAN NOT NULL DEFAULT false,
     "roles" "Role"[] DEFAULT ARRAY['USER']::"Role"[],
+    "address" TEXT,
+    "phoneNumber" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -60,6 +65,18 @@ CREATE TABLE "Lead" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Lead_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "LeadAccess" (
+    "id" SERIAL NOT NULL,
+    "userId" INTEGER NOT NULL,
+    "leadId" INTEGER NOT NULL,
+    "role" "LeadAccessRole" NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "LeadAccess_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -142,11 +159,20 @@ CREATE UNIQUE INDEX "Token_token_key" ON "Token"("token");
 -- CreateIndex
 CREATE INDEX "token_user_id_idx" ON "Token"("userId");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "LeadAccess_userId_leadId_key" ON "LeadAccess"("userId", "leadId");
+
 -- AddForeignKey
 ALTER TABLE "Token" ADD CONSTRAINT "Token_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Lead" ADD CONSTRAINT "Lead_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "LeadAccess" ADD CONSTRAINT "LeadAccess_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "LeadAccess" ADD CONSTRAINT "LeadAccess_leadId_fkey" FOREIGN KEY ("leadId") REFERENCES "Lead"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Contact" ADD CONSTRAINT "Contact_leadId_fkey" FOREIGN KEY ("leadId") REFERENCES "Lead"("id") ON DELETE CASCADE ON UPDATE CASCADE;

@@ -23,10 +23,12 @@ import { useCreateUser } from "@/lib/hooks/api";
 
 type FormValues = z.infer<typeof ValidationSignup>;
 
+
 const RegisterForm = () => {
   const [loading, setLoading] = React.useState(false);
-  const createUser, { isLoading, error } = useCreateUser();
-
+  
+  const { mutateAsync: createUser, isLoading } = useCreateUser();
+  
   const { register, handleSubmit, formState: { errors }, reset } = useForm<FormValues>({
     resolver: zodResolver(ValidationSignup),
   });
@@ -34,17 +36,16 @@ const RegisterForm = () => {
   const onSubmit = async (values: FormValues) => {
     setLoading(true);
     try {
-      const result = await createUser.mutateAsync(values);
+      await createUser(values);
       notify("success", "Account created successfully!");
       reset();
-      window.location.href = "/login";
+      window.location.href = "/signin";
     } catch (error: any) {
       notify("error", error?.data?.message || "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
   };
-
   const handleGoogleLogin = async () => {
     window.open(`http://localhost:5000/auth/google`, "_self");
   };

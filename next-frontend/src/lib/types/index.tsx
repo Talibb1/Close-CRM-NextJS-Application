@@ -38,6 +38,7 @@ export interface ApiResponse<T> {
   status: string;
   message: string;
   data: T;
+  error?: string;
   user: {
     token: string;
     email: string;
@@ -102,4 +103,9 @@ export interface ChangePasswordData {
   currentPassword: string;
   newPassword: string;
   newPasswordConfirmation: string;
+}
+
+
+export interface UpdateNotes {
+  content?: string;
 }

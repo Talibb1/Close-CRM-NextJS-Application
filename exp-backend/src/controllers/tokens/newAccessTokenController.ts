@@ -1,6 +1,6 @@
 // import { Request, Response } from 'express';
-// import refreshAccessToken from '../utils/RefreshAccessToken/refreshAccessToken';
-// import setTokenCookies from '../utils/GenerateToken/setTokenCookies';
+// import refreshAccessToken from '../../utils/refreshAccessToken/refreshAccessToken';
+// import setTokenCookies from '../../utils/generateToken/setTokenCookies';
 
 // const newAccessTokenController = async (req: Request, res: Response): Promise<void> => {
 //   try {

@@ -11,7 +11,7 @@ import { ChangepasswordSchema } from "@/components/ui/validationSchema";
 
 export default function Security() {
   const [loading, setLoading] = useState(false);
-  const updatePassword = useChangePassword();
+  const { mutateAsync: changePassword } = useChangePassword(); // Extract mutateAsync for API call
 
   const {
     register,
@@ -25,7 +25,8 @@ export default function Security() {
   const onSubmit = async (data: any) => {
     setLoading(true);
     try {
-      const result = await updatePassword.mutateAsync(data);
+      // Call the mutation function and await the result
+      const result = await changePassword(data); 
       notify("success", "Password changed successfully!");
       reset();
     } catch (error: any) {
@@ -37,7 +38,6 @@ export default function Security() {
       setLoading(false);
     }
   };
-
   return (
     <>
       <ToastProvider />

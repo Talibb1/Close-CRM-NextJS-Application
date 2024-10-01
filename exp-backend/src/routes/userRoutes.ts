@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 dotenv.config();
 const router = express.Router();
 import accessTokenAutoRefresh from "../middleware/accessTokenAuto";
-import { Register, Login, Changepassword } from "../controllers/auth";
+import { Register, Login, Changepassword, Logout } from "../controllers/auth";
 import {
   CreateLead,
   DeleteLead,
@@ -12,7 +12,7 @@ import {
   GetLeads,
   UpdateLead,
 } from "../controllers/leads";
-import { UserProfile } from "../controllers/user";
+import { DeleteUser, UpdateUser, UserProfile } from "../controllers/user";
 import {
   CreateContact,
   DeleteContact,
@@ -22,17 +22,42 @@ import {
 } from "../controllers/contacts";
 import { handleCSVUpload } from "../services/uploadService";
 import upload from "../utils/storage";
-import { CreateNotes, DeleteNoteById, GetNotesByLeadId, UpdateNoteById } from "../controllers/note";
+import {
+  CreateNotes,
+  DeleteNoteById,
+  GetNotesByLeadId,
+  UpdateNoteById,
+} from "../controllers/note";
 import { checkRole } from "../middleware/checkRole";
 
 // Public Routes
 router.post("/register", Register);
 router.post("/login", Login);
-router.post("/changepassword", Changepassword);
+
+router.post(
+  "/changepassword",
+  accessTokenAutoRefresh,
+  passport.authenticate("jwt", { session: false }),
+  Changepassword
+);
+
+router.post(
+  "/logout",
+  accessTokenAutoRefresh,
+  passport.authenticate("jwt", { session: false }),
+  Logout
+);
 // router.post("/forgotpassword", ForgotPassword);
 // router.post("/passwordreset", PasswordReset);
 
 // user profile routes
+// router.get(
+//   "/tokens",
+//   setAuthHeader,
+//   passport.authenticate("jwt", { session: false }),
+//   newAccessTokenController
+// );
+
 router.get(
   "/userProfile",
   accessTokenAutoRefresh,
@@ -40,6 +65,18 @@ router.get(
   UserProfile
 );
 
+router.delete(
+  "/deleteuser/:id",
+  // accessTokenAutoRefresh,
+  // passport.authenticate("jwt", { session: false }),
+  DeleteUser
+);
+router.put(
+  "/updateuser/:id",
+  // accessTokenAutoRefresh,
+  // passport.authenticate("jwt", { session: false }),
+  UpdateUser
+);
 //            *****************   Lead Management Routes   ********************
 router.post(
   "/createleads",
@@ -49,10 +86,10 @@ router.post(
 );
 router.get(
   "/getleads",
-  // passport.authenticate("jwt", { session: false }), 
-  // accessTokenAutoRefresh,                           
-  // checkRole(['admin', 'superadmin']),              
-  GetLeads                                         
+  // passport.authenticate("jwt", { session: false }),
+  // accessTokenAutoRefresh,
+  // checkRole(['admin', 'superadmin']),
+  GetLeads
 );
 
 router.delete(
@@ -106,7 +143,6 @@ router.get(
   GetContactById
 );
 
-
 router.post(
   "/createnotes",
   // accessTokenAutoRefresh,
@@ -133,7 +169,6 @@ router.put(
   // passport.authenticate("jwt", { session: false }),
   UpdateNoteById
 );
-
 
 // Upload CSV
 router.post("/upload-csv", upload.single("file"), handleCSVUpload);

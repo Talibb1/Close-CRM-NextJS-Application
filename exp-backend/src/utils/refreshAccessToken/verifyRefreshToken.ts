@@ -1,8 +1,6 @@
 import jwt, { JwtPayload } from "jsonwebtoken";
-import { PrismaClient } from "@prisma/client";
+import prisma from "../../prisma/prismaClient";
 import { JWT_REFRESH_KEY } from "../../constants";
-
-const prisma = new PrismaClient();
 
 interface TokenDetails {
   tokenDetails: JwtPayload | string;
@@ -10,11 +8,10 @@ interface TokenDetails {
   message: string;
 }
 
-const verifyRefreshToken = async (refreshToken: string): Promise<TokenDetails> => {
-  if (!refreshToken) {
-    throw new Error("Refresh token is required");
-  }
- try {
+const verifyRefreshToken = async (
+  refreshToken: string
+): Promise<TokenDetails> => {
+  try {
     const userRefreshToken = await prisma.token.findUnique({
       where: {
         token: refreshToken,
@@ -24,22 +21,31 @@ const verifyRefreshToken = async (refreshToken: string): Promise<TokenDetails> =
     if (!userRefreshToken) {
       throw new Error("Invalid refresh token");
     }
-
-    const tokenDetails = jwt.verify(refreshToken, JWT_REFRESH_KEY as string) as JwtPayload;
-
+    const tokenDetails = jwt.verify(
+      refreshToken,
+      JWT_REFRESH_KEY as string
+    ) as JwtPayload;
+    if (!tokenDetails || !tokenDetails.id) {
+      throw new Error("Invalid refresh token details");
+    }
     return {
       tokenDetails,
       error: false,
       message: "Valid refresh token",
     };
   } catch (error: any) {
-    if (error.name === "JsonWebTokenError") {
-      throw new Error("Invalid refresh token");
-    }
     if (error.name === "TokenExpiredError") {
-      throw new Error("Refresh token expired");
+      return {
+        tokenDetails: "",
+        error: true,
+        message: "Refresh token has expired",
+      };
     }
-    throw new Error("Failed to verify refresh token");
+    return {
+      tokenDetails: "",
+      error: true,
+      message: error.message,
+    };
   }
 };
 

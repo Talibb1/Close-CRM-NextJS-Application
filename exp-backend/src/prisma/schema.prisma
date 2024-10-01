@@ -13,9 +13,9 @@ enum TokenType {
 }
 
 enum Role {
+  SUPERADMIN
   ADMIN
   USER
-  SUPERADMIN
 }
 
 enum AuthProvider {
@@ -37,6 +37,13 @@ enum OpportunityStage {
   CLOSED_LOST
 }
 
+enum LeadAccessRole {
+  ADMIN
+  SUPERADMIN
+  RESTRICTEDUSER
+  USER
+}
+
 model User {
   id            Int            @id @default(autoincrement())
   firstName     String
@@ -50,8 +57,11 @@ model User {
   roles         Role[]         @default([USER])
   tokens        Token[]
   leads         Lead[]
+  leadAccess    LeadAccess[]
   tasks         Task[]
   activityLogs  ActivityLog[]
+  address       String?
+  phoneNumber   String?
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 }
@@ -84,10 +94,24 @@ model Lead {
   opportunities Opportunity[]
   userId        Int
   User          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  leadAccess    LeadAccess[]
   tasks         Task[]
   activityLogs  ActivityLog[]
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
+}
+
+model LeadAccess {
+  id        Int            @id @default(autoincrement())
+  userId    Int
+  User      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  leadId    Int
+  Lead      Lead           @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  role      LeadAccessRole
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@unique([userId, leadId])
 }
 
 model Contact {

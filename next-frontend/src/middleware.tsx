@@ -1,17 +1,13 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-const authPaths: string[] = [
-  "/signin",
-  "/signup",
-  "/forgot-password",
-];
+const authPaths: string[] = ["/signin", "/signup", "/forgot-password"];
 const protectedPaths: string[] = [
-  // "/dashboard",
-   "/Leads",
-    "/settings",
-    "/profile", 
-    "/account",
-  ]; 
+  "/dashboard",
+  "/Leads",
+  "/settings",
+  "/profile",
+  "/account",
+];
 
 export function middleware(request: NextRequest) {
   const isAuthenticated = request.cookies.get("isAuth")?.value === "true";
@@ -32,14 +28,16 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!api|_next|.*\\..*).*)", 
+    "/((?!api|_next|.*\\..*).*)",
     "/signin",
     "/signup",
-    "/forgot-password", 
-    // "/dashboard",
-    // "/profile",
-    // "/account",
-    // "/Leads",
-    // "/settings",
+    "/forgot-password",
+    "/dashboard",
+    "/profile",
+    "/security",
+    "/account",
+    "/Leads",
+    "/Contacts",
+    "/Settings",
   ],
 };

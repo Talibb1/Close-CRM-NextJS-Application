@@ -1,4 +1,3 @@
-// components/ui/table.tsx
 import * as React from "react"
 
 export const Table = React.forwardRef<HTMLTableElement, React.TableHTMLAttributes<HTMLTableElement>>(

@@ -11,19 +11,16 @@ interface Tokens {
 
 interface UserPayload {
   id: number;
-  roles: string[];
 }
 
 const generateTokens = async (user: UserPayload): Promise<Tokens> => {
   try {
-    const payload = { id: user.id, roles: user.roles };
+    const payload = { id: user.id };
 
-    // Access token expires in 100 seconds
-    const accessTokenExp = Math.floor(Date.now() / 1000) + 100;
+    const accessTokenExp = Math.floor(Date.now() / 1000) + 60 * 1;
     const accessToken = jwt.sign({ ...payload, exp: accessTokenExp }, JWT_ACCESS_KEY as string);
-
-    // Refresh token expires in 5 days
-    const refreshTokenExp = Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 5;
+    
+    const refreshTokenExp = Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7;
     const refreshToken = jwt.sign({ ...payload, exp: refreshTokenExp }, JWT_REFRESH_KEY as string);
     
     await prisma.token.deleteMany({
@@ -31,7 +28,6 @@ const generateTokens = async (user: UserPayload): Promise<Tokens> => {
         userId: user.id,
       },
     });
-    
     
     await prisma.token.create({
       data: {

@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import { FaEye } from "react-icons/fa";
 import { RiEyeCloseLine } from "react-icons/ri";

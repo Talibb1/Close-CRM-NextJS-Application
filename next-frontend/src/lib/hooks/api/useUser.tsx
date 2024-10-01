@@ -1,24 +1,29 @@
-// src/hooks/useUser.ts
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { createUser, loginUser, getUser, logoutUser, changePassword } from '../../services/api';
-import { UserResponse, ApiResponse, LoginData } from '../../types';
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { getUser, updateUser, deleteUser } from "../../services/api";
+import { UserResponse, ApiResponse, User } from "../../types";
 
-export const useCreateUser = () => {
-  return useMutation<ApiResponse<UserResponse>, unknown, CreateUserInput>((userData) => createUser(userData));
-};
-
-export const useLoginUser = () => {
-  return useMutation<ApiResponse<UserResponse>, unknown, LoginData>((loginData) => loginUser(loginData));
-};
 
 export const useGetUser = () => {
-  return useQuery<ApiResponse<UserResponse>>(['user'], getUser);
+  return useQuery({
+    queryKey: ["user"],
+    queryFn: getUser, 
+    staleTime: 5 * 60 * 1000,
+  });
 };
 
-export const useLogoutUser = () => {
-  return useMutation<ApiResponse<null>, unknown>(() => logoutUser());
+
+export const useUpdateUser = () => {
+  return useMutation<ApiResponse<UserResponse>, unknown, { id: number; userData: Partial<User> }>({
+    mutationFn: async ({ id, userData }: { id: number; userData: Partial<User> }) => {
+      return await updateUser(id, userData);
+    },
+  });
 };
 
-export const useChangePassword = () => {
-  return useMutation<ApiResponse<null>, unknown, { oldPassword: string; newPassword: string }>(changePassword);
+export const useDeleteUser = () => {
+  return useMutation<ApiResponse<null>, unknown, number>({
+    mutationFn: async (id: number) => {
+      return await deleteUser(id);
+    },
+  });
 };

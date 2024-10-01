@@ -26,7 +26,6 @@ export const checkRole = (roles: string[]) => {
         return res.status(403).json({ message: 'Access denied' });
       }
 
-      // If the role is valid, proceed to the next middleware
       next();
     } catch (error) {
       return res.status(500).json({ message: 'Server error' });

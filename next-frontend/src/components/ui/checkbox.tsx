@@ -1,7 +1,6 @@
-// components/ui/checkbox.tsx
 import * as React from "react"
 import * as CheckboxPrimitive from "@radix-ui/react-checkbox"
-import { cn } from "@/lib/utils" // Utility function for conditional class names
+import { cn } from "@/lib/utils" 
 
 export const Checkbox = React.forwardRef<
   React.ElementRef<typeof CheckboxPrimitive.Root>,

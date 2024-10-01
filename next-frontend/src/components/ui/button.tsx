@@ -1,6 +1,14 @@
 import * as React from "react";
 import { cn } from "@/lib/Helper/utils";
 
+interface ButtonProps {
+  className?: string;
+  variant?: 'default' | 'outline' | 'ghost' | 'primary';
+  size?: 'sm' | 'md' | 'lg';
+  children: React.ReactNode;
+  [key: string]: any;
+}
+
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "default", size = "md", children, ...props }, ref) => {
     return (

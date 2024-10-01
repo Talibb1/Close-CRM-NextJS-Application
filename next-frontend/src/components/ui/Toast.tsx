@@ -1,5 +1,4 @@
-
-import toast, { Toaster } from 'react-hot-toast';
+import toast, { Toaster } from "react-hot-toast";
 
 export const ToastProvider = () => (
   <>
@@ -7,10 +6,10 @@ export const ToastProvider = () => (
   </>
 );
 
-export const notify = (type: 'success' | 'error', message: string) => {
-  if (type === 'success') {
+export const notify = (type: "success" | "error", message: string) => {
+  if (type === "success") {
     toast.success(message);
-  } else if (type === 'error') {
+  } else if (type === "error") {
     toast.error(message);
   }
 };

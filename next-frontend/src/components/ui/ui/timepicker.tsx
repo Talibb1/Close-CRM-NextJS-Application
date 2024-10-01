@@ -1,4 +1,3 @@
-"use client";
 import React from "react";
 import { Controller, Control } from "react-hook-form";
 import { TimePicker as AntTimePicker } from "antd"; 

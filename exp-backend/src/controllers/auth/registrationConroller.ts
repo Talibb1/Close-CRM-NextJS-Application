@@ -4,12 +4,12 @@ import prisma from "../../prisma/prismaClient";
 import { SALT } from "../../constants";
 
 const RegisterUser = async (req: Request, res: Response): Promise<Response> => {
-  const { firstName, lastName, email, password } = req.body;
+  const { firstName, lastName, email, password, avatar, address, phoneNumber } = req.body;
 
   if (!firstName || !lastName || !email || !password) {
     return res.status(400).json({
       status: "failed",
-      message: "All fields are required.",
+      message: "First name, last name, email, and password are required.",
     });
   }
 
@@ -25,7 +25,6 @@ const RegisterUser = async (req: Request, res: Response): Promise<Response> => {
           message: "Email already registered with local credentials.",
         });
       }
-
       if (!existingUser.password && password) {
         const hashedPassword = await bcrypt.hash(password, Number(SALT));
 
@@ -44,28 +43,37 @@ const RegisterUser = async (req: Request, res: Response): Promise<Response> => {
           message: "Account updated with local credentials.",
         });
       }
-
       return res.status(400).json({
         status: "failed",
         message: "User already exists with the given email.",
       });
     }
-
     const hashedPassword = await bcrypt.hash(password, Number(SALT));
-
     const newUser = await prisma.user.create({
       data: {
         firstName,
         lastName,
         email,
         password: hashedPassword,
-        authProviders: ["LOCAL"], 
+        avatar: avatar || null,           
+        address: address || null,         
+        phoneNumber: phoneNumber || null,
+        authProviders: ["LOCAL"],
       },
     });
 
     return res.status(201).json({
       status: "success",
       message: "User registered successfully.",
+      user: {
+        id: newUser.id,
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
+        email: newUser.email,
+        avatar: newUser.avatar,
+        address: newUser.address,
+        phoneNumber: newUser.phoneNumber,
+      },
     });
 
   } catch (error) {
