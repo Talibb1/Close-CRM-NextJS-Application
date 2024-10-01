@@ -18,7 +18,7 @@ COPY exp-backend .
 RUN npm run build
 
 # Expose the port your app runs on
-EXPOSE 8080
+EXPOSE 5000
 
 # Start the app
 CMD ["npm", "run", "start"]
