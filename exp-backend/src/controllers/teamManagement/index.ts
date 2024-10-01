@@ -1,5 +1,3 @@
-import UserProfile from "./userProfileController";
-import DeleteUser from "./deleteUserController";
-import UpdateUser from "./updateUserController";
+import CreateMember from "./createTeam";
 
-export { UserProfile, DeleteUser, UpdateUser };
+export { CreateMember };

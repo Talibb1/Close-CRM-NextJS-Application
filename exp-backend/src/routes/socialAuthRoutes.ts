@@ -21,15 +21,21 @@ interface AuthenticatedUser {
 }
 
 // Handle the callback after Google authentication
+// Handle the callback after Google authentication
 const handleAuthCallback = (req: Request, res: Response): void => {
   const { user, accessToken, refreshToken, accessTokenExp, refreshTokenExp } = req.user as AuthenticatedUser;
 
+  // Convert Date objects to timestamps (milliseconds since Unix epoch)
+  const accessTokenExpMs = accessTokenExp.getTime(); 
+  const refreshTokenExpMs = refreshTokenExp.getTime(); 
+
   // Set cookies with the tokens
-  setTokensCookies(res, accessToken, refreshToken, accessTokenExp, refreshTokenExp, user.id);
+  setTokensCookies(res, accessToken, refreshToken, accessTokenExpMs, refreshTokenExpMs, user.id);
 
   // Successful authentication, redirect home
   res.redirect(`${NEXT_API_BASE_URL}`);
 };
+
 
 // Create routes specifically for Google authentication
 export const createGoogleAuthRoutes = (): Router => {
