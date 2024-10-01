@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Table } from '@tanstack/react-table';
 import { Input } from '@/components/ui/ui/input';
-import { DataTableViewOptions } from '../components/data-table-view-options';
+import { DataTableViewOptions } from './data-table-view-options';
 import { CreateLeads } from './CRUD-Actions/createleads';
 import { debounce } from 'lodash';
 import { PuffLoader } from 'react-spinners';

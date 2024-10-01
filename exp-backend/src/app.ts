@@ -4,16 +4,15 @@ import cookieParser from 'cookie-parser';
 import passport from 'passport';
 import dotenv from 'dotenv';
 import router from './routes/userRoutes';
-import { PrismaClient } from '@prisma/client';
 import { PORT } from './constants';
 import { createGoogleAuthRoutes } from "./routes/socialAuthRoutes"; 
 import './middleware/passport';
 import './controllers/oAuth/google-strategy';
+import prisma from './prisma/prismaClient';
 
 dotenv.config();
 
 const app = express();
-const prisma = new PrismaClient();
 
 const allowedOrigins = ['http://localhost:3000'];
 app.use(

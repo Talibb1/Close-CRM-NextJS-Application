@@ -1,5 +1,5 @@
 import TableLoader from "@/components/layouts/loader/TableLoder";
-import TeamManagement from "@/components/pages/teamManagement";
+import TeamManagement from "@/components/pages/settings/teamManagement";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
