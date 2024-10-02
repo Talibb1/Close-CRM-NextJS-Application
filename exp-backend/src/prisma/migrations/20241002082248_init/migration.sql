@@ -2,9 +2,6 @@
 CREATE TYPE "TokenType" AS ENUM ('ACCESS', 'REFRESH');
 
 -- CreateEnum
-CREATE TYPE "Role" AS ENUM ('SUPERADMIN', 'ADMIN', 'USER');
-
--- CreateEnum
 CREATE TYPE "AuthProvider" AS ENUM ('GOOGLE', 'LOCAL');
 
 -- CreateEnum
@@ -23,13 +20,14 @@ CREATE TABLE "User" (
     "lastName" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "avatar" TEXT,
+    "address" TEXT,
+    "phoneNumber" TEXT,
     "password" TEXT,
     "googleId" TEXT,
     "authProviders" "AuthProvider"[] DEFAULT ARRAY['LOCAL']::"AuthProvider"[],
     "isActive" BOOLEAN NOT NULL DEFAULT false,
-    "roles" "Role"[] DEFAULT ARRAY['USER']::"Role"[],
-    "address" TEXT,
-    "phoneNumber" TEXT,
+    "organizationId" INTEGER,
+    "defaultRoleId" INTEGER,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -37,16 +35,58 @@ CREATE TABLE "User" (
 );
 
 -- CreateTable
-CREATE TABLE "Token" (
+CREATE TABLE "Role" (
     "id" SERIAL NOT NULL,
-    "token" TEXT NOT NULL,
+    "roleName" TEXT NOT NULL,
+    "description" TEXT,
+
+    CONSTRAINT "Role_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "UserRole" (
+    "id" SERIAL NOT NULL,
     "userId" INTEGER NOT NULL,
-    "type" "TokenType" NOT NULL,
-    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "roleId" INTEGER NOT NULL,
+
+    CONSTRAINT "UserRole_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Permission" (
+    "id" SERIAL NOT NULL,
+    "permissionName" TEXT NOT NULL,
+
+    CONSTRAINT "Permission_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "RolePermission" (
+    "roleId" INTEGER NOT NULL,
+    "permissionId" INTEGER NOT NULL,
+
+    CONSTRAINT "RolePermission_pkey" PRIMARY KEY ("roleId","permissionId")
+);
+
+-- CreateTable
+CREATE TABLE "Organization" (
+    "id" SERIAL NOT NULL,
+    "name" TEXT NOT NULL,
+    "ownerId" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "Token_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "Organization_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "OrganizationRole" (
+    "id" SERIAL NOT NULL,
+    "userId" INTEGER NOT NULL,
+    "organizationId" INTEGER NOT NULL,
+    "role" "LeadAccessRole" NOT NULL,
+
+    CONSTRAINT "OrganizationRole_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -61,6 +101,7 @@ CREATE TABLE "Lead" (
     "website" TEXT,
     "description" TEXT,
     "userId" INTEGER NOT NULL,
+    "organizationId" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -77,6 +118,19 @@ CREATE TABLE "LeadAccess" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "LeadAccess_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Token" (
+    "id" SERIAL NOT NULL,
+    "token" TEXT NOT NULL,
+    "userId" INTEGER NOT NULL,
+    "type" "TokenType" NOT NULL,
+    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Token_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -147,11 +201,32 @@ CREATE TABLE "ActivityLog" (
     CONSTRAINT "ActivityLog_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "_OrganizationUsers" (
+    "A" INTEGER NOT NULL,
+    "B" INTEGER NOT NULL
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_googleId_key" ON "User"("googleId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Role_roleName_key" ON "Role"("roleName");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "UserRole_userId_roleId_key" ON "UserRole"("userId", "roleId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Permission_permissionName_key" ON "Permission"("permissionName");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "OrganizationRole_userId_organizationId_key" ON "OrganizationRole"("userId", "organizationId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "LeadAccess_userId_leadId_key" ON "LeadAccess"("userId", "leadId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Token_token_key" ON "Token"("token");
@@ -160,19 +235,49 @@ CREATE UNIQUE INDEX "Token_token_key" ON "Token"("token");
 CREATE INDEX "token_user_id_idx" ON "Token"("userId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "LeadAccess_userId_leadId_key" ON "LeadAccess"("userId", "leadId");
+CREATE UNIQUE INDEX "_OrganizationUsers_AB_unique" ON "_OrganizationUsers"("A", "B");
+
+-- CreateIndex
+CREATE INDEX "_OrganizationUsers_B_index" ON "_OrganizationUsers"("B");
 
 -- AddForeignKey
-ALTER TABLE "Token" ADD CONSTRAINT "Token_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "User" ADD CONSTRAINT "User_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "UserRole" ADD CONSTRAINT "UserRole_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "UserRole" ADD CONSTRAINT "UserRole_roleId_fkey" FOREIGN KEY ("roleId") REFERENCES "Role"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "RolePermission" ADD CONSTRAINT "RolePermission_roleId_fkey" FOREIGN KEY ("roleId") REFERENCES "Role"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "RolePermission" ADD CONSTRAINT "RolePermission_permissionId_fkey" FOREIGN KEY ("permissionId") REFERENCES "Permission"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Organization" ADD CONSTRAINT "Organization_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "OrganizationRole" ADD CONSTRAINT "OrganizationRole_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "OrganizationRole" ADD CONSTRAINT "OrganizationRole_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Lead" ADD CONSTRAINT "Lead_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Lead" ADD CONSTRAINT "Lead_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "LeadAccess" ADD CONSTRAINT "LeadAccess_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "LeadAccess" ADD CONSTRAINT "LeadAccess_leadId_fkey" FOREIGN KEY ("leadId") REFERENCES "Lead"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Token" ADD CONSTRAINT "Token_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Contact" ADD CONSTRAINT "Contact_leadId_fkey" FOREIGN KEY ("leadId") REFERENCES "Lead"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -197,3 +302,9 @@ ALTER TABLE "ActivityLog" ADD CONSTRAINT "ActivityLog_contactId_fkey" FOREIGN KE
 
 -- AddForeignKey
 ALTER TABLE "ActivityLog" ADD CONSTRAINT "ActivityLog_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "_OrganizationUsers" ADD CONSTRAINT "_OrganizationUsers_A_fkey" FOREIGN KEY ("A") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "_OrganizationUsers" ADD CONSTRAINT "_OrganizationUsers_B_fkey" FOREIGN KEY ("B") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;

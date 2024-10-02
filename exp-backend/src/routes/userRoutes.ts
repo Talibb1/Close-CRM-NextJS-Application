@@ -29,6 +29,8 @@ import {
   UpdateNoteById,
 } from "../controllers/note";
 import { checkRole } from "../middleware/checkRole";
+import { CreateTeam, DeleteTeam, GetTeam, UpdateTeam } from "../controllers/teamManagement";
+import { CreateOrg, DeleteOrg, GetOrg, UpdateOrg } from "../controllers/organization";
 
 // Public Routes
 router.post("/register", Register);
@@ -143,6 +145,8 @@ router.get(
   GetContactById
 );
 
+
+//             ***************  Note Management Routes ***************
 router.post(
   "/createnotes",
   // accessTokenAutoRefresh,
@@ -169,6 +173,59 @@ router.put(
   // passport.authenticate("jwt", { session: false }),
   UpdateNoteById
 );
+
+//             ***************  Organization Management Routes ***************
+router.post(
+  "/createorganization",
+  // accessTokenAutoRefresh,
+  // passport.authenticate("jwt", { session: false }),
+  CreateOrg
+);
+router.get(
+  "/getorganizations/:id",
+  // accessTokenAutoRefresh,
+  // passport.authenticate("jwt", { session: false }),
+  GetOrg
+);
+router.put(
+  "/updateorganizations/:id",
+  // accessTokenAutoRefresh,
+  // passport.authenticate("jwt", { session: false }),
+  UpdateOrg
+);
+router.delete(
+  "/deleteorganizations/:id",
+  // accessTokenAutoRefresh,
+  // passport.authenticate("jwt", { session: false }),
+  DeleteOrg
+);
+
+//             ***************  Team Management Routes ***************
+router.post(
+  "/createteam",
+  // accessTokenAutoRefresh,
+  // passport.authenticate("jwt", { session: false }),
+  CreateTeam
+);
+router.get(
+  "/getteams/:email",
+  // accessTokenAutoRefresh,
+  // passport.authenticate("jwt", { session: false }),
+  GetTeam
+);
+router.put(
+  "/updatteam/:id",
+  // accessTokenAutoRefresh,
+  // passport.authenticate("jwt", { session: false }),
+  UpdateTeam
+);
+router.delete(
+  "/deleteteam/:id",
+  // accessTokenAutoRefresh,
+  // passport.authenticate("jwt", { session: false }),
+  DeleteTeam
+);
+
 
 // Upload CSV
 router.post("/upload-csv", upload.single("file"), handleCSVUpload);

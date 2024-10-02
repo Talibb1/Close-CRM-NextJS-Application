@@ -9,9 +9,9 @@ const UpdateUser = async (req: Request, res: Response): Promise<Response> => {
     lastName,
     email,
     avatar,
-    roles,
-    address,   
-    phoneNumber, 
+    roles, // Role IDs to assign
+    address,
+    phoneNumber,
   } = req.body;
 
   const { id } = req.params;
@@ -23,16 +23,10 @@ const UpdateUser = async (req: Request, res: Response): Promise<Response> => {
     });
   }
 
-  if (roles && !roles.every((role: string) => validRoles.includes(role))) {
-    return res.status(400).json({
-      status: "failed",
-      message: "Invalid role(s) provided.",
-    });
-  }
-
   try {
     const existingUser = await prisma.user.findUnique({
       where: { id: parseInt(id) },
+      include: { roles: true }, // Include roles relation
     });
 
     if (!existingUser) {
@@ -41,20 +35,39 @@ const UpdateUser = async (req: Request, res: Response): Promise<Response> => {
         message: "User not found.",
       });
     }
+
     const updateData: any = {
       firstName: firstName || existingUser.firstName,
       lastName: lastName || existingUser.lastName,
       email: email || existingUser.email,
       avatar: avatar || existingUser.avatar,
-      roles: roles || existingUser.roles,  
-      address: address || existingUser.address, 
+      address: address || existingUser.address,
       phoneNumber: phoneNumber || existingUser.phoneNumber,
       updatedAt: new Date(),
     };
+
     const updatedUser = await prisma.user.update({
       where: { id: parseInt(id) },
       data: updateData,
     });
+
+    // Update roles if provided
+    if (roles && roles.length > 0) {
+      // Clear old roles
+      await prisma.userRole.deleteMany({
+        where: { userId: parseInt(id) },
+      });
+
+      // Assign new roles
+      const userRolesData = roles.map((roleId: number) => ({
+        userId: parseInt(id),
+        roleId,
+      }));
+
+      await prisma.userRole.createMany({
+        data: userRolesData,
+      });
+    }
 
     return res.status(200).json({
       status: "success",
@@ -69,5 +82,6 @@ const UpdateUser = async (req: Request, res: Response): Promise<Response> => {
     });
   }
 };
+
 
 export default UpdateUser;

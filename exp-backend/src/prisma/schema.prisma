@@ -12,12 +12,6 @@ enum TokenType {
   REFRESH
 }
 
-enum Role {
-  SUPERADMIN
-  ADMIN
-  USER
-}
-
 enum AuthProvider {
   GOOGLE
   LOCAL
@@ -37,7 +31,7 @@ enum OpportunityStage {
   CLOSED_LOST
 }
 
-enum LeadAccessRole {
+enum AccessRole {
   ADMIN
   SUPERADMIN
   RESTRICTEDUSER
@@ -45,25 +39,125 @@ enum LeadAccessRole {
 }
 
 model User {
-  id            Int            @id @default(autoincrement())
-  firstName     String
-  lastName      String
-  email         String         @unique
-  avatar        String?
-  password      String?
-  googleId      String?        @unique
-  authProviders AuthProvider[] @default([LOCAL])
-  isActive      Boolean        @default(false)
-  roles         Role[]         @default([USER])
-  tokens        Token[]
-  leads         Lead[]
-  leadAccess    LeadAccess[]
-  tasks         Task[]
-  activityLogs  ActivityLog[]
-  address       String?
-  phoneNumber   String?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  id                    Int                @id @default(autoincrement())
+  firstName             String
+  lastName              String
+  email                 String             @unique
+  avatar                String?
+  address               String?
+  phoneNumber           String?
+  password              String?
+  googleId              String?            @unique
+  authProviders         AuthProvider[]     @default([LOCAL])
+  isActive              Boolean            @default(false)
+  organizationId        Int? // Optional organization association
+  organization          Organization?      @relation(fields: [organizationId], references: [id]) // Relation to Organization
+  ownedOrganizations    Organization[]     @relation("OrganizationOwner") // Opposite relation for owner in Organization
+  memberOfOrganizations Organization[]     @relation("OrganizationUsers") // Opposite relation for users in Organization
+  roles                 UserRole[] // Many-to-many relation with Role
+  organizationRoles     OrganizationRole[] // New relation for roles specific to organizations
+  defaultRoleId         Int? // Reference to default role
+  tokens                Token[]
+  leads                 Lead[]
+  tasks                 Task[]
+  activityLogs          ActivityLog[]
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+  leadAccess            LeadAccess[] // Relation for LeadAccess
+}
+
+model Role {
+  id          Int              @id @default(autoincrement())
+  roleName    String           @unique
+  description String?
+  permissions RolePermission[] // Connects roles to permissions
+  users       UserRole[] // Many-to-many relation with users
+}
+
+model UserRole {
+  id     Int  @id @default(autoincrement())
+  userId Int
+  roleId Int
+  user   User @relation(fields: [userId], references: [id])
+  role   Role @relation(fields: [roleId], references: [id])
+
+  @@unique([userId, roleId])
+}
+
+model Permission {
+  id             Int              @id @default(autoincrement())
+  permissionName String           @unique
+  roles          RolePermission[] // Connects permissions to roles
+}
+
+model RolePermission {
+  roleId       Int
+  permissionId Int
+  role         Role       @relation(fields: [roleId], references: [id])
+  permission   Permission @relation(fields: [permissionId], references: [id])
+
+  @@id([roleId, permissionId])
+}
+
+model Organization {
+  id               Int                @id @default(autoincrement())
+  name             String
+  ownerId          Int
+  owner            User               @relation("OrganizationOwner", fields: [ownerId], references: [id]) // Organization owner relation
+  users            User[]             @relation("OrganizationUsers") // Users in the organization
+  leads            Lead[]
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  User             User[]
+  OrganizationRole OrganizationRole[]
+}
+
+model OrganizationRole {
+  id             Int            @id @default(autoincrement())
+  userId         Int
+  organizationId Int
+  role           AccessRole // Role of the user within the organization
+  user           User           @relation(fields: [userId], references: [id])
+  organization   Organization   @relation(fields: [organizationId], references: [id])
+
+  @@unique([userId, organizationId]) // Ensure a user can have only one role per organization
+}
+
+model Lead {
+  id             Int           @id @default(autoincrement())
+  companyName    String
+  industry       String?
+  status         String?       @default("Potential")
+  phone          String?
+  email          String?
+  source         String?
+  website        String?
+  description    String?
+  userId         Int
+  User           User          @relation(fields: [userId], references: [id], onDelete: Cascade) // Relation to User
+  organizationId Int
+  organization   Organization  @relation(fields: [organizationId], references: [id]) // Relation to Organization
+  leadAccess     LeadAccess[]
+  contacts       Contact[] // Opposite relation for Contact
+  opportunities  Opportunity[] // Opposite relation for Opportunity
+  notes          Note[] // Opposite relation for Note
+  tasks          Task[]
+  activityLogs   ActivityLog[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+}
+
+model LeadAccess {
+  id        Int            @id @default(autoincrement())
+  userId    Int
+  User      User           @relation(fields: [userId], references: [id], onDelete: Cascade) // Relation to User
+  leadId    Int
+  Lead      Lead           @relation(fields: [leadId], references: [id], onDelete: Cascade) // Relation to Lead
+  role      AccessRole
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@unique([userId, leadId])
 }
 
 model Token {
@@ -79,41 +173,6 @@ model Token {
   @@index([userId], map: "token_user_id_idx")
 }
 
-model Lead {
-  id            Int           @id @default(autoincrement())
-  companyName   String
-  industry      String?
-  status        String?       @default("Potential")
-  phone         String?
-  email         String?
-  source        String?
-  website       String?
-  description   String?
-  contacts      Contact[]
-  notes         Note[]
-  opportunities Opportunity[]
-  userId        Int
-  User          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  leadAccess    LeadAccess[]
-  tasks         Task[]
-  activityLogs  ActivityLog[]
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-}
-
-model LeadAccess {
-  id        Int            @id @default(autoincrement())
-  userId    Int
-  User      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  leadId    Int
-  Lead      Lead           @relation(fields: [leadId], references: [id], onDelete: Cascade)
-  role      LeadAccessRole
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
-
-  @@unique([userId, leadId])
-}
-
 model Contact {
   id             Int           @id @default(autoincrement())
   contactName    String
@@ -123,7 +182,7 @@ model Contact {
   position       String?
   contactDetails String?
   leadId         Int
-  Lead           Lead          @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  Lead           Lead          @relation(fields: [leadId], references: [id], onDelete: Cascade) // Relation to Lead
   activityLogs   ActivityLog[]
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
@@ -136,7 +195,7 @@ model Opportunity {
   stage     OpportunityStage @default(QUALIFICATION)
   closeDate DateTime?
   leadId    Int
-  Lead      Lead             @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  Lead      Lead             @relation(fields: [leadId], references: [id], onDelete: Cascade) // Relation to Lead
   createdAt DateTime         @default(now())
   updatedAt DateTime         @updatedAt
 }
@@ -145,7 +204,7 @@ model Note {
   id        Int      @id @default(autoincrement())
   content   String?
   leadId    Int
-  Lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  Lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade) // Relation to Lead
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -157,9 +216,9 @@ model Task {
   dueDate     DateTime?
   status      TaskStatus @default(PENDING)
   leadId      Int
-  Lead        Lead       @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  Lead        Lead       @relation(fields: [leadId], references: [id], onDelete: Cascade) // Relation to Lead
   userId      Int
-  User        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  User        User       @relation(fields: [userId], references: [id], onDelete: Cascade) // Relation to User
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 }
@@ -169,15 +228,9 @@ model ActivityLog {
   action    String
   leadId    Int?
   contactId Int?
-  Lead      Lead?    @relation(fields: [leadId], references: [id], onDelete: Cascade)
-  Contact   Contact? @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  Lead      Lead?    @relation(fields: [leadId], references: [id], onDelete: Cascade) // Optional relation to Lead
+  Contact   Contact? @relation(fields: [contactId], references: [id], onDelete: Cascade) // Optional relation to Contact
   userId    Int
   User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
 }
-
-// import { User, Token } from "./models/user.prisma"
-// import { Lead, Opportunity, Contact, Note, Task, ActivityLog } from "./models/crm.prisma"
-
-// npx prisma generate --schema=./src/prisma/schema.prisma
-// npx prisma migrate dev --schema=./src/prisma/schema.prisma --name init

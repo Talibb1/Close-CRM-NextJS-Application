@@ -4,7 +4,7 @@ import { DataTableColumnHeader } from './data-table-column-header';
 import { DataTableRowActions } from './data-table-row-actions';
 import { FaPhone, FaEnvelope } from "react-icons/fa";
 import { Checkbox } from '@/components/ui/checkbox';
-import Image from 'next/image'; // Import Image component for displaying user image
+import Image from 'next/image';
 
 const dynamicColumns = [
   { key: 'id', label: 'ID', width: '80px', sortable: false, hideable: false },

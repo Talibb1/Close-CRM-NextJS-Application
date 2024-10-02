@@ -14,6 +14,7 @@ const RegisterUser = async (req: Request, res: Response): Promise<Response> => {
   }
 
   try {
+    // Check if the user already exists
     const existingUser = await prisma.user.findUnique({
       where: { email },
     });
@@ -48,7 +49,26 @@ const RegisterUser = async (req: Request, res: Response): Promise<Response> => {
         message: "User already exists with the given email.",
       });
     }
+
+    // Hash the password
     const hashedPassword = await bcrypt.hash(password, Number(SALT));
+
+    // Check if default role exists, and if not, create it
+    let defaultRole = await prisma.role.findUnique({
+      where: { roleName: "USER" },
+    });
+
+    if (!defaultRole) {
+      // If default role doesn't exist, create it
+      defaultRole = await prisma.role.create({
+        data: {
+          roleName: "USER",
+          description: "Default role assigned to new users",
+        },
+      });
+    }
+
+    // Create new user
     const newUser = await prisma.user.create({
       data: {
         firstName,
@@ -62,9 +82,17 @@ const RegisterUser = async (req: Request, res: Response): Promise<Response> => {
       },
     });
 
+    // Assign the default role to the user
+    await prisma.userRole.create({
+      data: {
+        userId: newUser.id,
+        roleId: defaultRole.id,
+      },
+    });
+
     return res.status(201).json({
       status: "success",
-      message: "User registered successfully.",
+      message: "User registered successfully with default role.",
       user: {
         id: newUser.id,
         firstName: newUser.firstName,
@@ -73,6 +101,7 @@ const RegisterUser = async (req: Request, res: Response): Promise<Response> => {
         avatar: newUser.avatar,
         address: newUser.address,
         phoneNumber: newUser.phoneNumber,
+        role: defaultRole.roleName,
       },
     });
 

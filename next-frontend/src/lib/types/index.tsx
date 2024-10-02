@@ -34,6 +34,17 @@ export interface ProfileResponse {
   user: User;
 }
 
+export interface Organization {
+  id: number;
+  name: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface CreateOrganizationInput {
+  name: string;
+}
+
 export interface ApiResponse<T> {
   status: string;
   message: string;
@@ -103,6 +114,18 @@ export interface ChangePasswordData {
   currentPassword: string;
   newPassword: string;
   newPasswordConfirmation: string;
+}
+
+export interface CreateTeamMemberInput {
+  email: string;           
+  role: string;            
+  organizationId: number;  
+}
+
+export interface UpdateTeamMemberInput {
+  email?: string;      
+  role?: string;           
+  organizationId?: number; 
 }
 
 

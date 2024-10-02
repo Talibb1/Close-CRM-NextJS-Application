@@ -17,6 +17,7 @@ export default function Profile({ userId }: { userId: number }) {
   const { mutate: deleteUser } = useDeleteUser();
   const { data: userData, isLoading } = useGetUser();
   const user = userData?.user;
+  console.log(userData)
 
   const rolesOptions = ["Admin", "User", "Super User", "Restricted User"];
 

@@ -1,5 +1,6 @@
 import {
   IconAddressBook,
+  IconAffiliate,
   IconChecklist,
   IconLayoutDashboard,
   IconSettings,
@@ -49,6 +50,12 @@ export const sidelinks: SideLink[] = [
         label: "",
         href: "/dashboard/Settings/profile",
         icon: <IconUserCircle size={18} />,
+      },
+      {
+        title: "Organization",
+        label: "",
+        href: "/dashboard/Settings/organization",
+        icon: <IconAffiliate size={18} />,
       },
       {
         title: "Team Management",

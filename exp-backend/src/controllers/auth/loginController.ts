@@ -8,20 +8,25 @@ interface LoginRequestBody {
   email: string;
   password: string;
 }
-
 const userLogin = async (req: Request<{}, {}, LoginRequestBody>, res: Response) => {
   try {
     const { email, password } = req.body;
-    
+
     if (!email || !password) {
       return res.status(400).json({
         status: 'failed',
         message: 'Email and password are required.',
       });
     }
-
     const user = await prisma.user.findUnique({
       where: { email },
+      include: {
+        roles: {
+          include: {
+            role: true,
+          },
+        },
+      },
     });
 
     if (!user || !user.password) {
@@ -39,15 +44,15 @@ const userLogin = async (req: Request<{}, {}, LoginRequestBody>, res: Response) 
         message: 'Invalid email or password.',
       });
     }
-
     const { accessToken, refreshToken, accessTokenExp, refreshTokenExp } = await generateTokens(user);
     setTokensCookies(res, accessToken, refreshToken, accessTokenExp, refreshTokenExp, user.id);
+
+    const roles = user.roles.map(userRole => userRole.role.roleName);
 
     await prisma.user.update({
       where: { id: user.id },
       data: { isActive: true },
     });
-
     return res.status(200).json({
       status: 'success',
       message: 'Login successful.',
@@ -56,7 +61,9 @@ const userLogin = async (req: Request<{}, {}, LoginRequestBody>, res: Response) 
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
-        roles: user.roles,
+        address: user.address,
+        phoneNumber: user.phoneNumber,
+        roles,
         isActive: true,
       },
       access_Token: accessToken,

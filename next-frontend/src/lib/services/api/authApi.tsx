@@ -6,7 +6,6 @@ import {
   CreateUserInput,
 } from "../../types";
 
-// Function to create a user with error handling
 export const createUser = async (
   user: CreateUserInput
 ): Promise<ApiResponse<UserResponse>> => {
@@ -18,8 +17,6 @@ export const createUser = async (
     throw new Error(error.response ? error.response.data.message : "An error occurred while creating the user.");
   }
 };
-
-// Function to log in a user with error handling
 export const loginUser = async (
   data: LoginData
 ): Promise<ApiResponse<UserResponse>> => {
@@ -43,7 +40,6 @@ export const logoutUser = async (): Promise<ApiResponse<null>> => {
   }
 };
 
-// Function to change user password with error handling
 export const changePassword = async (data: {
   oldPassword: string;
   newPassword: string;
