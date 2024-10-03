@@ -12,6 +12,7 @@ export const GetTeam = async (req: Request, res: Response) => {
       },
     });
 
+    
     if (teamMembers.length === 0) {
       return res
         .status(404)
