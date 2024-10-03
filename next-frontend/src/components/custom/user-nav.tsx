@@ -19,6 +19,7 @@ export function UserNav() {
   const { data: userData, isLoading, isError } = useGetUser();
   const { mutate: logout, isLoading: isLoggingOut } = useLogoutUser();
 
+  console.log("accountData:",userData)
   const user = userData?.user;
   interface User {
     firstName: string;

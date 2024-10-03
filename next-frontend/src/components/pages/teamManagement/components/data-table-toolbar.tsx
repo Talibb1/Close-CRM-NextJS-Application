@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Table } from '@tanstack/react-table';
 import { Input } from '@/components/ui/ui/input';
 import { DataTableViewOptions } from './data-table-view-options';
-import { CreateLeads } from './CRUD-Actions/createleads';
+import { CreateTeamMembers } from './CRUD-Actions/createleads';
 import { debounce } from 'lodash';
 import { PuffLoader } from 'react-spinners';
 
@@ -50,7 +50,7 @@ export function DataTableToolbar<TData>({
         </div>
       </div>
       <div className="flex items-center space-x-2">
-        <CreateLeads />
+        <CreateTeamMembers />
         <DataTableViewOptions table={table} />
       </div>
     </div>

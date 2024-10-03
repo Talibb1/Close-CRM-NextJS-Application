@@ -50,13 +50,13 @@ model User {
   googleId              String?            @unique
   authProviders         AuthProvider[]     @default([LOCAL])
   isActive              Boolean            @default(false)
-  organizationId        Int? // Optional organization association
+  organizationId        Int?
   organization          Organization?      @relation(fields: [organizationId], references: [id]) // Relation to Organization
   ownedOrganizations    Organization[]     @relation("OrganizationOwner") // Opposite relation for owner in Organization
   memberOfOrganizations Organization[]     @relation("OrganizationUsers") // Opposite relation for users in Organization
-  roles                 UserRole[] // Many-to-many relation with Role
-  organizationRoles     OrganizationRole[] // New relation for roles specific to organizations
-  defaultRoleId         Int? // Reference to default role
+  roles                 UserRole[]
+  organizationRoles     OrganizationRole[] 
+  defaultRoleId         Int? 
   tokens                Token[]
   leads                 Lead[]
   tasks                 Task[]

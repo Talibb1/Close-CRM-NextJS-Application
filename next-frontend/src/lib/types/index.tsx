@@ -21,6 +21,7 @@ export interface User {
   password: string;
   confirmPassword: string;
   picture?: string;
+  organizationId: number;
 }
 
 export interface UserResponse {
@@ -57,6 +58,7 @@ export interface ApiResponse<T> {
     roles?: string[];
     isAuth?: boolean;
     name: string;
+    organizationId: number;
   };
 }
 

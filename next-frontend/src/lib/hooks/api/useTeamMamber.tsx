@@ -10,10 +10,10 @@ export const useCreateTeamMember = () => {
   });
 };
 
-export const useGetTeamMembers = (email: string) => {
+export const useGetTeamMembers = (id: number) => {
     return useQuery<ApiResponse<User[]>>({
-      queryKey: ["teamMembers", email],
-      queryFn: () => getTeamMembers(email),
+      queryKey: ["teamMembers", id],
+      queryFn: () => getTeamMembers(id),
     });
   };
 

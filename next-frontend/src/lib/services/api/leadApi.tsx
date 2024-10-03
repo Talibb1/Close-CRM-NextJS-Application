@@ -11,8 +11,6 @@ export const createLead = async (lead: CreateLeadInput): Promise<ApiResponse<Lea
     throw new Error(error.response ? error.response.data.message : "An error occurred while creating the lead.");
   }
 };
-
-// Get all leads with error handling
 export const getLeads = async (): Promise<ApiResponse<Lead[]>> => {
   try {
     const response = await axiosClient.get("getleads");

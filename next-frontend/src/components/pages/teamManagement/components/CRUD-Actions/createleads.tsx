@@ -7,13 +7,15 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ToastProvider, notify } from "@/components/ui/Toast";
-import { useCreateTeamMember } from "@/lib/hooks/api";
+import { useCreateTeamMember, useGetUser } from "@/lib/hooks/api";
 import { useLoading } from "@/components/ui/ui/loading";
 import { PlusIcon } from "@radix-ui/react-icons";
 import { updatedSchema } from "./validationSchema";
 import React from "react";
+import { CreateTeamMemberInput } from "@/lib/types";
 
 type FormValues = z.infer<typeof updatedSchema>;
+type AccessRole = 'ADMIN' | 'SUPERADMIN' | 'RESTRICTEDUSER' | 'USER';
 
 export function CreateTeamMembers() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -21,7 +23,8 @@ export function CreateTeamMembers() {
   const createTeamMember = useCreateTeamMember();
   const { loading, startLoading, stopLoading } = useLoading();
 
-  
+  // Fetch user data to get the organizationId
+  const { data: user } = useGetUser();
   const {
     register,
     handleSubmit,
@@ -30,19 +33,30 @@ export function CreateTeamMembers() {
   } = useForm<FormValues>({
     resolver: zodResolver(updatedSchema),
   });
-
   const onSubmit = async (data: FormValues) => {
+    if (!user?.user.organizationId) {
+      notify("error", "Organization not found. Please try again.");
+      return;
+    }
+
     startLoading();
     try {
+      // Create the object to pass to the API
+      const teamMemberData: CreateTeamMemberInput = {
+        email: data.email,
+        role: data.category.toUpperCase() as AccessRole,
+        organizationId: user.user?.organizationId,
+      };
+
       // Call the API for creating a team member
-      await createTeamMember.mutateAsync(data);
+      await createTeamMember.mutateAsync(teamMemberData);
       notify("success", "Team member added successfully!");
       reset();
       setIsModalOpen(false);
     } catch (err: any) {
       notify(
         "error",
-        err?.data?.message || "Something went wrong. Please try again."
+        err?.message || "Something went wrong. Please try again."
       );
     } finally {
       stopLoading();
@@ -91,10 +105,10 @@ export function CreateTeamMembers() {
                     className="w-full p-2 bg-gray-100 dark:bg-gray-700 dark:text-white border dark:border-gray-600"
                   >
                     <option value="">Select Role</option>
-                    <option value="admin">Admin</option>
-                    <option value="restricted_user">Restricted User</option>
-                    <option value="super_user">Super User</option>
-                    <option value="user">User</option>
+                    <option value="ADMIN">Admin</option>
+                    <option value="RESTRICTEDUSER">Restricted User</option>
+                    <option value="SUPERADMIN">Super User</option>
+                    <option value="USER">User</option>
                   </select>
                   {errors.category && isSubmitted && (
                     <p className="text-red-500 text-sm dark:text-red-400">

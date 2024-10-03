@@ -11,7 +11,7 @@ CREATE TYPE "TaskStatus" AS ENUM ('PENDING', 'COMPLETED', 'CANCELLED');
 CREATE TYPE "OpportunityStage" AS ENUM ('QUALIFICATION', 'PROPOSAL', 'NEGOTIATION', 'CLOSED_WON', 'CLOSED_LOST');
 
 -- CreateEnum
-CREATE TYPE "LeadAccessRole" AS ENUM ('ADMIN', 'SUPERADMIN', 'RESTRICTEDUSER', 'USER');
+CREATE TYPE "AccessRole" AS ENUM ('ADMIN', 'SUPERADMIN', 'RESTRICTEDUSER', 'USER');
 
 -- CreateTable
 CREATE TABLE "User" (
@@ -84,7 +84,7 @@ CREATE TABLE "OrganizationRole" (
     "id" SERIAL NOT NULL,
     "userId" INTEGER NOT NULL,
     "organizationId" INTEGER NOT NULL,
-    "role" "LeadAccessRole" NOT NULL,
+    "role" "AccessRole" NOT NULL,
 
     CONSTRAINT "OrganizationRole_pkey" PRIMARY KEY ("id")
 );
@@ -113,7 +113,7 @@ CREATE TABLE "LeadAccess" (
     "id" SERIAL NOT NULL,
     "userId" INTEGER NOT NULL,
     "leadId" INTEGER NOT NULL,
-    "role" "LeadAccessRole" NOT NULL,
+    "role" "AccessRole" NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 

@@ -4,8 +4,6 @@ import { UserResponse, ApiResponse, ProfileResponse, User } from "../../types";
 export const getUser = async (): Promise<ApiResponse<ProfileResponse>> => {
   try {
     const response = await axiosClient.get("userProfile");
-
-    console.log("response.data:", response.data);
     return response.data;
   } catch (error: any) {
     console.error("Error in getUser:", error.response ? error.response.data : error.message);

@@ -3,49 +3,49 @@
 import { Suspense, useEffect } from "react";
 import { DataTable } from "./components/data-table";
 import { columns } from "./components/columns";
-import { useLeads } from "@/lib/hooks/api/useLead";
+import { useGetUser,useGetTeamMembers } from "@/lib/hooks/api"; // Assuming this hook fetches current user
 import TableLoder from "@/components/layouts/loader/TableLoder";
 
 export default function TeamManagement() {
-  const { data, error, isLoading, isFetching } = useLeads();
+  // Fetch the current user to get their organization ID
+  const { data: userData, error: userError, isLoading: userLoading } = useGetUser();
+  
+  const organizationId = userData?.user?.organizationId;
+  const { data, error, isLoading, isFetching } = useGetTeamMembers(organizationId || 0); 
 
   useEffect(() => {}, [data, error, isFetching]);
 
-  if (error) {
-    if (error && "data" in error) {
-      const errorMessage = (error as any)?.data?.message || "Unknown error";
-      return <p>Error fetching data: {errorMessage}</p>;
-    }
-    if ("message" in error) {
-      return <p>Error: {(error as any).message}</p>;
-    }
-    return <p>An unknown error occurred.</p>;
+  // Handle errors for both user and team members
+  if (userError || error) {
+    const errorMessage =
+      userError?.message || error?.message || "Unknown error occurred.";
+    return <p>Error: {errorMessage}</p>;
   }
 
-  const leads = data?.data || [];
+  // Handle loading states for user or team members
+  if (userLoading || isLoading || isFetching) {
+    return <TableLoder />;
+  }
 
+  const teamMembers = data?.data || [];
+
+  console.log("Team members:", teamMembers);
   return (
     <Suspense>
       <div className="min-h-screen flex flex-col">
         <main className="flex-1 px-4 py-6 md:px-8">
           <div className="mb-2 flex items-center justify-between space-y-2">
             <div>
-              <h2 className="text-2xl font-bold tracking-tight">
-              Team Management
-              </h2>
+              <h2 className="text-2xl font-bold tracking-tight">Team Management</h2>
               <p className="text-muted-foreground">
-              Manage your team members, assign roles, and track their progress.
+                Manage your team members, assign roles, and track their progress.
               </p>
             </div>
           </div>
 
           {/* ===== Data Table ===== */}
           <div className="flex-1 lg:flex-row lg:space-x-12 lg:space-y-0">
-            {isLoading || isFetching ? (
-              <TableLoder />
-            ) : (
-              <DataTable data={leads} columns={columns} />
-            )}
+            <DataTable data={teamMembers} columns={columns} />
           </div>
         </main>
       </div>

@@ -2,8 +2,8 @@ import { Request, Response } from "express";
 import prisma from "../../prisma/prismaClient";
 
 const createTeam = async (req: Request, res: Response): Promise<Response> => {
-  const { email, role, organizationId } = req.body; 
-  
+  const { email, role, organizationId } = req.body;
+
   const userId = parseInt(req.cookies.userId || "", 10);
   if (!email || !role || isNaN(userId) || !organizationId) {
     return res.status(400).json({
@@ -11,8 +11,21 @@ const createTeam = async (req: Request, res: Response): Promise<Response> => {
       message: "Email, role, valid user ID, and organization ID are required.",
     });
   }
-
   try {
+    const userOrganizationRole = await prisma.organizationRole.findFirst({
+      where: {
+        userId: userId,
+        organizationId: organizationId,
+        role: "ADMIN",
+      },
+    });
+
+    if (!userOrganizationRole) {
+      return res.status(403).json({
+        status: "failed",
+        message: "Only admins can assign roles to users in this organization.",
+      });
+    }
     const existingUser = await prisma.user.findUnique({
       where: { email },
     });
@@ -23,53 +36,34 @@ const createTeam = async (req: Request, res: Response): Promise<Response> => {
         message: `No user found with the email "${email}".`,
       });
     }
-
-    // Check if the organization is valid for the current user (the admin)
-    const userOrganizationRole = await prisma.organizationRole.findFirst({
+    const existingOrgRole = await prisma.organizationRole.findFirst({
       where: {
-        userId: userId,
+        userId: existingUser.id,
         organizationId: organizationId,
       },
     });
 
-    if (!userOrganizationRole || userOrganizationRole.role !== 'ADMIN') {
-      return res.status(403).json({
-        status: "failed",
-        message: "Only admins can assign roles to users in this organization.",
-      });
-    }
-
-    // Check if the user already has access to the lead
-    const existingAccess = await prisma.leadAccess.findFirst({
-      where: {
-        userId: existingUser.id,
-        leadId: req.body.leadId,
-      },
-    });
-
-    if (existingAccess) {
+    if (existingOrgRole) {
       return res.status(400).json({
         status: "failed",
-        message: `User already has access to this lead.`,
+        message: "User is already a member of this organization.",
       });
     }
-
-    // Create the new lead access for the user
-    const newLeadAccess = await prisma.leadAccess.create({
+    const newOrganizationRole = await prisma.organizationRole.create({
       data: {
         userId: existingUser.id,
-        leadId: req.body.leadId,
-        role, // Set the role assigned to the user
+        organizationId: organizationId,
+        role: role,
       },
     });
 
     return res.status(201).json({
       status: "success",
-      message: "Member access created successfully.",
-      data: newLeadAccess,
+      message: "Member added to the organization successfully.",
+      data: newOrganizationRole,
     });
   } catch (error) {
-    console.error("Member creation error:", error);
+    console.error("Error creating team member:", error);
     return res.status(500).json({
       status: "failed",
       message: "Server error. Please try again later.",

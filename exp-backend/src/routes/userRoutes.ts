@@ -208,7 +208,7 @@ router.post(
   CreateTeam
 );
 router.get(
-  "/getteams/:email",
+  "/getteams/:id",
   // accessTokenAutoRefresh,
   // passport.authenticate("jwt", { session: false }),
   GetTeam

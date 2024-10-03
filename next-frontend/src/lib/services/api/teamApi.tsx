@@ -13,15 +13,18 @@ export const createTeamMember = async (teamMember: CreateTeamMemberInput): Promi
 };
 
 // Get team members with error handling
-export const getTeamMembers = async (email: string): Promise<ApiResponse<User[]>> => {
+export const getTeamMembers = async (id: number): Promise<ApiResponse<User[]>> => {
   try {
-    const response = await axiosClient.get<ApiResponse<User[]>>(`getteams/${email}`);
+    console.log("Fetching team members for organizationId:", id); // Debug log
+    const response = await axiosClient.get<ApiResponse<User[]>>(`getteams/${id}`);
+    console.log("API Response:", response.data);
     return response.data;
   } catch (error: any) {
     console.error("Error in getTeamMembers:", error.response ? error.response.data : error.message);
     throw new Error(error.response ? error.response.data.message : "An error occurred while fetching the team members.");
   }
 };
+
 
 // Delete team member by ID with error handling
 export const deleteTeamMemberById = async (id: number): Promise<ApiResponse<null>> => {
